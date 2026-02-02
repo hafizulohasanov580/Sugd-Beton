@@ -12,35 +12,53 @@
         :root { --p: #f97316; --bg: #0f172a; --card: #1e293b; --txt: #f8fafc; --brd: #475569; --s: #22c55e; }
         body.light { --bg: #f8fafc; --card: #ffffff; --txt: #0f172a; --brd: #cbd5e1; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.2s; }
-        body { margin: 0; background: var(--bg); color: var(--txt); overflow: hidden; font-size: 12px; }
+        body { margin: 0; background: var(--bg); color: var(--txt); overflow: hidden; font-size: 12px; height: 100vh; display: flex; flex-direction: column; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; border:none; border-bottom: 1px solid var(--brd); background: transparent; color: var(--p); font-weight: bold; width: 50px; text-align: center; outline: none; }
+        
         .screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
         .hidden { display: none !important; }
-        .box { background: var(--card); padding: 30px; border-radius: 16px; border: 1px solid var(--p); text-align: center; width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
-        .logo { font-size: 26px; font-weight: 900; color: var(--txt); margin-bottom: 25px; }
-        .logo span { color: var(--p); }
-        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 12px; font-size: 14px; }
-        .btn-white { background: #fff; color: #000; }
-        .btn-dark { background: #334155; color: #fff; border: 1px solid var(--brd); }
-        .btn-orange { background: var(--p); color: #fff; }
-        .header { background: var(--card); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--p); }
-        .lang-s { display: flex; gap: 6px; }
-        .l-btn { background: var(--brd); padding: 6px 10px; border-radius: 6px; border: none; color: #fff; cursor: pointer; font-size: 11px; font-weight: bold; }
-        .l-btn.active { background: var(--p) !important; color: #fff !important; }
-        .controls { padding: 12px; display: flex; gap: 8px; background: var(--card); border-bottom: 1px solid var(--brd); }
-        .txt-in { background: var(--bg); border: 1px solid var(--brd); padding: 10px; color: var(--txt); border-radius: 6px; flex: 2; outline: none; }
-        .view { width: 100vw; height: calc(100vh - 140px); overflow: auto; }
+        .box { background: var(--card); padding: 30px; border-radius: 16px; border: 1px solid var(--p); text-align: center; width: 340px; }
+        
+        .header { background: var(--card); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--p); flex-shrink: 0; }
+        .controls { padding: 8px 12px; display: flex; gap: 8px; background: var(--card); border-bottom: 1px solid var(--brd); flex-shrink: 0; }
+        
+        /* Главный контейнер для таблицы */
+        .app-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .view { flex: 1; overflow: auto; width: 100%; }
+        
         table { border-collapse: separate; border-spacing: 0; width: 100%; }
         thead th { position: sticky; top: 0; background: var(--card); z-index: 50; padding: 10px; border-bottom: 1px solid var(--p); color: var(--txt); font-size: 11px; }
-        .cw { position: sticky; left: 0; z-index: 60; width: 150px; background: var(--card); padding: 10px; border-right: 2px solid var(--p); font-weight: bold; }
-        .cd { width: 35px; text-align: center; border-right: 1px solid var(--brd); }
-        .ct { width: 80px; position: sticky; right: 0; background: var(--card); z-index: 40; border-left: 2px solid var(--p); text-align: center; color: var(--s); font-weight: 900; font-size: 13px; }
-        .sq-h { width: 24px; height: 24px; border: 1px solid var(--brd); border-radius: 5px; margin: 3px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--bg); font-size: 12px; color: var(--p); font-weight: bold; }
+        
+        /* Фиксация общего итога снизу */
+        .total-bar { 
+            background: var(--p); 
+            color: #fff; 
+            padding: 12px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: 900; 
+            font-size: 16px; 
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+            z-index: 80;
+            flex-shrink: 0;
+        }
+
+        .cw { position: sticky; left: 0; z-index: 45; width: 140px; background: var(--card); padding: 8px; border-right: 2px solid var(--p); font-weight: bold; }
+        .cd { width: 35px; text-align: center; border-right: 1px solid var(--brd); border-bottom: 1px solid var(--brd); }
+        .ct { width: 80px; position: sticky; right: 0; background: var(--card); z-index: 40; border-left: 2px solid var(--p); text-align: center; color: var(--s); font-weight: 900; font-size: 13px; border-bottom: 1px solid var(--brd); }
+        
+        .sq-h { width: 24px; height: 24px; border: 1px solid var(--brd); border-radius: 5px; margin: 3px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--bg); color: var(--p); }
         .sq-h.on { background: var(--s); color: #000; border: none; }
         .sq-h.on::after { content: '✓'; }
         .sq-a { width: 22px; height: 16px; border: 1px dashed var(--p); border-radius: 10px; margin: 3px auto; cursor: pointer; font-size: 9px; color: var(--p); display: flex; align-items: center; justify-content: center; }
         .sq-a.on { background: var(--p); color: #fff; border-style: solid; }
+        
+        .txt-in { background: var(--bg); border: 1px solid var(--brd); padding: 8px; color: var(--txt); border-radius: 6px; flex: 1; outline: none; }
+        .logo { font-size: 24px; font-weight: 900; color: var(--txt); }
+        .logo span { color: var(--p); }
+        .btn { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body id="mainBody">
@@ -48,21 +66,20 @@
 <div id="screen-login" class="screen">
     <div class="box">
         <div class="logo">Sugd <span>Beton</span></div>
-        <button class="btn btn-white" id="btn-google">G Google (Облако)</button>
-        <button class="btn btn-dark" onclick="authLocal()">💾 Только устройство</button>
+        <button class="btn btn-white" style="width:100%; background:#fff; margin-bottom:10px" id="btn-google">G Google (Облако)</button>
+        <button class="btn btn-dark" style="width:100%; background:#334155; color:#fff" onclick="authLocal()">💾 Только устройство</button>
     </div>
 </div>
 
 <div id="screen-pin" class="screen hidden">
     <div class="box">
-        <div class="logo">🔐</div>
-        <h3 id="pin-title">Введите PIN</h3>
-        <input type="tel" id="pin-input" style="width:100%; font-size:28px; text-align:center; padding:10px; border-radius:8px; border:1px solid var(--brd); background:var(--bg); color:var(--txt);" maxlength="4">
-        <button class="btn btn-orange" onclick="checkPin()" id="btn-login-text">ВХОД</button>
+        <h3 id="pin-title">PIN</h3>
+        <input type="tel" id="pin-input" style="width:100%; font-size:30px; text-align:center; margin-bottom:15px" maxlength="4">
+        <button class="btn" style="width:100%; background:var(--p); color:#fff" onclick="checkPin()" id="btn-login-text">ВХОД</button>
     </div>
 </div>
 
-<div id="screen-app" class="hidden">
+<div id="screen-app" class="hidden" style="height:100vh; display:flex; flex-direction:column">
     <div class="header">
         <div class="lang-s">
             <button class="l-btn" id="l-ru" onclick="setLang('ru')">RU</button>
@@ -70,25 +87,32 @@
             <button class="l-btn" id="l-en" onclick="setLang('en')">EN</button>
             <button class="l-btn" onclick="toggleTheme()" style="margin-left:8px; background:#475569">🌓</button>
         </div>
-        <button id="btn-exit" onclick="location.reload()" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer">ВЫХОД</button>
+        <button id="btn-exit" onclick="location.reload()" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-weight:bold">ВЫХОД</button>
     </div>
 
     <div class="controls">
-        <input type="text" id="nw" class="txt-in" placeholder="Имя мастера">
-        <button onclick="addW()" style="background:var(--p); color:#fff; border:none; padding:10px 18px; border-radius:6px; font-weight:bold">OK</button>
-        <button onclick="genPDF()" style="background:#fff; color:#000; border:none; padding:10px 15px; border-radius:6px; font-weight:bold">PDF</button>
+        <input type="text" id="nw" class="txt-in" placeholder="Мастер">
+        <button onclick="addW()" style="background:var(--p); color:#fff; border:none; padding:8px 15px; border-radius:6px; font-weight:bold">OK</button>
+        <button onclick="genPDF()" style="background:#fff; color:#000; border:none; padding:8px 15px; border-radius:6px; font-weight:bold">PDF</button>
     </div>
     
     <div class="controls" style="padding-top:0">
-        <select id="mS" onchange="render()" style="flex:1; background:var(--card); color:var(--txt); border:1px solid var(--brd); padding:8px; border-radius:6px;"></select>
-        <select id="yS" onchange="render()" style="flex:1; background:var(--card); color:var(--txt); border:1px solid var(--brd); padding:8px; border-radius:6px;"></select>
+        <select id="mS" onchange="render()" class="txt-in"></select>
+        <select id="yS" onchange="render()" class="txt-in"></select>
     </div>
 
-    <div class="view">
-        <table>
-            <thead><tr id="hRow"><th class="cw" id="th-m">МАСТЕР</th><th class="ct" id="th-t">ИТОГО</th></tr></thead>
-            <tbody id="tBody"></tbody>
-        </table>
+    <div class="app-container">
+        <div class="view">
+            <table>
+                <thead><tr id="hRow"><th class="cw" id="th-m">МАСТЕР</th><th class="ct" id="th-t">ИТОГО</th></tr></thead>
+                <tbody id="tBody"></tbody>
+            </table>
+        </div>
+        
+        <div class="total-bar">
+            <span id="total-label">ОБЩИЙ ИТОГ:</span>
+            <span id="total-all-val">0</span>
+        </div>
     </div>
 </div>
 
@@ -106,16 +130,16 @@
     let mode = 'local', userUid = 'local_user', pinCode = null, workers = [], curL = 'ru';
 
     const dict = {
-        ru: { m: "МАСТЕР", t: "ИТОГО", h: "Часы", r: "Ставка", ph: "Имя мастера", exit: "ВЫХОД", pinT: "Введите PIN", pinN: "Придумайте PIN", enter: "ВХОД", adv: "Аванс:", qh: "Часы (0-24):", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"] },
-        tj: { m: "УСТО", t: "ҶАЪМ", h: "Соат", r: "Нарх", ph: "Номи усто", exit: "ХУРУҶ", pinT: "Рамзро нависед", pinN: "Рамзи нав", enter: "ВОРУД", adv: "Аванс:", qh: "Соат (0-24):", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"] },
-        en: { m: "MASTER", t: "TOTAL", h: "Hrs", r: "Rate", ph: "Master Name", exit: "EXIT", pinT: "Enter PIN", pinN: "Create PIN", enter: "LOGIN", adv: "Adv:", qh: "Hours (0-24):", mo: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] }
+        ru: { m: "МАСТЕР", t: "ИТОГО", g: "ОБЩИЙ ИТОГ:", h: "Час", r: "Ставка", ph: "Имя мастера", exit: "ВЫХОД", pinT: "PIN", pinN: "Новый PIN", enter: "ВХОД", adv: "Аванс:", qh: "Часы:", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"] },
+        tj: { m: "УСТО", t: "ҶАЪМ", g: "ҶАЪМИ УМУМӢ:", h: "Соат", r: "Нарх", ph: "Номи усто", exit: "ХУРУҶ", pinT: "Рамз", pinN: "Рамзи нав", enter: "ВОРУД", adv: "Аванс:", qh: "Соат:", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"] },
+        en: { m: "MASTER", t: "TOTAL", g: "GRAND TOTAL:", h: "Hrs", r: "Rate", ph: "Name", exit: "EXIT", pinT: "PIN", pinN: "New PIN", enter: "LOGIN", adv: "Adv:", qh: "Hours:", mo: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] }
     };
 
     window.toggleTheme = () => document.getElementById('mainBody').classList.toggle('light');
     window.fN = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     
     window.tr = (s) => {
-        const map = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'j','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ы':'y','э':'e','ю':'yu','я':'ya','ҷ':'j','қ':'q','ҳ':'h','ӯ':'u','ғ':'gh'};
+        const map = {'ҷ':'j','қ':'q','ҳ':'h','ӯ':'u','ғ':'gh'};
         return s.toLowerCase().split('').map(c => map[c] || c).join('').toUpperCase();
     };
 
@@ -133,7 +157,7 @@
     window.checkPin = async function() {
         const v = document.getElementById('pin-input').value;
         if(!pinCode) { pinCode = v; if(mode==='local') localStorage.setItem('mp_pin',v); else await setDoc(doc(db,"users",userUid),{pin:v}); loadData(); }
-        else if(v === pinCode) loadData(); else alert("PIN Error!");
+        else if(v === pinCode) loadData(); else alert("Error!");
     }
 
     async function loadData() {
@@ -152,9 +176,8 @@
         document.getElementById('th-t').innerText = dict[l].t;
         document.getElementById('nw').placeholder = dict[l].ph;
         document.getElementById('btn-exit').innerText = dict[l].exit;
-        document.getElementById('btn-login-text').innerText = dict[l].enter;
-        const mS = document.getElementById('mS');
-        const sel = mS.value;
+        document.getElementById('total-label').innerText = dict[l].g;
+        const mS = document.getElementById('mS'), sel = mS.value;
         mS.innerHTML = '';
         dict[l].mo.forEach((m,i)=>mS.add(new Option(m,i,false,i===parseInt(sel||new Date().getMonth()))));
         render();
@@ -170,10 +193,13 @@
         const hr = document.getElementById('hRow');
         while(hr.children.length > 2) hr.removeChild(hr.children[1]);
         for(let d=1; d<=days; d++) { let th = document.createElement('th'); th.className='cd'; th.innerText=d; hr.insertBefore(th, hr.children[d]); }
+        
         const tb = document.getElementById('tBody'); tb.innerHTML = '';
+        let grandTotal = 0;
+
         workers.forEach((w, idx) => {
             let total = 0, hours = 0;
-            let html = `<td class="cw">${w.n}<br><small>${dict[curL].h}: <span id="th_${idx}">0</span></small><br><input type="number" value="${w.r}" onchange="updR(${idx},this.value)"><br><span onclick="delW(${idx})" style="color:#ef4444;cursor:pointer;font-size:9px">УДАЛИТЬ</span></td>`;
+            let html = `<td class="cw">${w.n}<br><small>${dict[curL].h}: <span id="th_${idx}">0</span></small><br><input type="number" value="${w.r}" onchange="updR(${idx},this.value)"><br><span onclick="delW(${idx})" style="color:#ef4444;cursor:pointer">DEL</span></td>`;
             for(let d=1; d<=days; d++) {
                 let k=`${y}_${m}_${d}`, h=w.d[k]?.h||0, a=w.d[k]?.a||0;
                 hours+=h; total+=(h*(w.r/8))-a;
@@ -182,70 +208,42 @@
                     <div class="sq-a ${a>0?'on':''}" onclick="setA(${idx},'${k}')">${a>0?a:'$'}</div>
                 </td>`;
             }
+            grandTotal += total;
             html += `<td class="ct">${fN(total)}</td>`;
             let row = document.createElement('tr'); row.innerHTML = html; tb.appendChild(row);
-            setTimeout(() => { let el=document.getElementById(`th_${idx}`); if(el) el.innerText = hours; }, 0);
+            setTimeout(() => { document.getElementById(`th_${idx}`).innerText = hours; }, 0);
         });
+        
+        document.getElementById('total-all-val').innerText = fN(grandTotal) + " TJS";
     }
 
     window.saveData = async () => { if(mode==='local') localStorage.setItem('mp_data',JSON.stringify(workers)); else await setDoc(doc(db,"data",userUid),{w:workers}); }
     window.updR = (i,v) => { workers[i].r = v; saveData(); render(); }
     window.delW = (i) => { if(confirm('Удалить?')) { workers.splice(i,1); saveData(); render(); } }
     window.setH = (i,k,v) => { if(!workers[i].d[k]) workers[i].d[k]={}; workers[i].d[k].h=(workers[i].d[k].h===8?0:8); saveData(); render(); }
-    
-    window.setCus = (e,i,k) => { 
-        e.preventDefault(); 
-        let v = prompt(dict[curL].qh); 
-        if(v !== null) { 
-            if(!workers[i].d[k]) workers[i].d[k]={}; 
-            workers[i].d[k].h = parseInt(v) || 0; 
-            saveData(); render(); 
-        } 
-    }
-    
     window.setA = (i,k) => { let v=prompt(dict[curL].adv); if(v!==null){ if(!workers[i].d[k])workers[i].d[k]={}; workers[i].d[k].a=parseFloat(v)||0; saveData(); render(); } }
+    window.setCus = (e,i,k) => { e.preventDefault(); let v = prompt(dict[curL].qh); if(v !== null) { if(!workers[i].d[k]) workers[i].d[k]={}; workers[i].d[k].h = parseInt(v) || 0; saveData(); render(); } }
 
     window.genPDF = () => {
         const { jsPDF } = window.jspdf;
         const docP = new jsPDF();
-        const y = yS.value;
-        const m = mS.value;
-        const monthName = dict[curL].mo[m];
-
-        docP.text("Sugd - Beton", 105, 10, {align:"center"});
-        docP.text(`${monthName} ${y}`, 105, 18, {align:"center"});
-
+        const y = yS.value, m = mS.value, monthName = dict[curL].mo[m];
+        docP.text(`Sugd Beton - ${monthName} ${y}`, 105, 15, {align:"center"});
+        let gt = 0;
         let rows = workers.map(w => {
-            let t=0, h_sum=0; 
-            const daysInMonth = new Date(y, parseInt(m)+1, 0).getDate();
-            for(let d=1; d<=daysInMonth; d++){
-                let k = `${y}_${m}_${d}`;
-                let h = w.d[k]?.h || 0;
-                let a = w.d[k]?.a || 0;
-                h_sum += h;
-                t += (h * (w.r/8)) - a;
-            }
-            return [tr(w.n), h_sum, fN(t) + " TJS"];
+            let t=0, hs=0, daysInMonth = new Date(y, parseInt(m)+1, 0).getDate();
+            for(let d=1; d<=daysInMonth; d++){ let k=`${y}_${m}_${d}`, h=w.d[k]?.h||0, a=w.d[k]?.a||0; hs+=h; t+=(h*(w.r/8))-a; }
+            gt += t; return [w.n, hs, fN(t) + " TJS"];
         });
-
-        docP.autoTable({ 
-            head: [['Master', 'Hours', 'Total']], 
-            body: rows, 
-            startY: 25,
-            theme: 'grid',
-            headStyles: { fillColor: [249, 115, 22] }
-        });
-        docP.save(`Report_${monthName}_${y}.pdf`);
+        rows.push([{ content: 'TOTAL:', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold' } }, fN(gt) + " TJS"]);
+        docP.autoTable({ head: [['Master', 'Hours', 'Total']], body: rows, startY: 25 });
+        docP.save(`Report_${monthName}.pdf`);
     }
 
     const mS=document.getElementById('mS'), yS=document.getElementById('yS');
     const curY = new Date().getFullYear();
     for(let y=2025; y<=2028; y++) yS.add(new Option(y, y, false, y===curY));
-    
-    // Авто-логин
-    const sm = localStorage.getItem('user_mode');
-    if(sm) { mode = sm; userUid = localStorage.getItem('user_uid') || 'local_user'; checkPinSetup(); }
-    
+    if(localStorage.getItem('user_mode')) { mode = localStorage.getItem('user_mode'); userUid = localStorage.getItem('user_uid') || 'local_user'; checkPinSetup(); }
     setLang('ru');
 </script>
 </body>
