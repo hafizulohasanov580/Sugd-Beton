@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Sugd-Beton</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -31,9 +31,11 @@
         .controls { padding: 12px; display: flex; gap: 8px; background: var(--card); border-bottom: 1px solid var(--brd); }
         .txt-in { background: var(--bg); border: 1px solid var(--brd); padding: 10px; color: var(--txt); border-radius: 6px; flex: 2; outline: none; }
         
-        .view { width: 100vw; height: calc(100vh - 140px); overflow: auto; position: relative; }
-        table { border-collapse: separate; border-spacing: 0; width: 100%; margin-bottom: 40px; }
-        thead th { position: sticky; top: 0; background: var(--card); z-index: 50; padding: 10px; border-bottom: 1px solid var(--p); color: var(--txt); font-size: 11px; }
+        /* Исправленный контейнер вида */
+        .view { width: 100vw; height: calc(100vh - 140px); overflow: auto; position: relative; -webkit-overflow-scrolling: touch; }
+        
+        table { border-collapse: separate; border-spacing: 0; width: 100%; margin-bottom: 80px; } /* Увеличен отступ снизу */
+        thead th { position: sticky; top: 0; background: var(--card); z-index: 100; padding: 10px; border-bottom: 1px solid var(--p); color: var(--txt); font-size: 11px; }
         .cw { position: sticky; left: 0; z-index: 60; width: 150px; background: var(--card); padding: 10px; border-right: 2px solid var(--p); font-weight: bold; }
         .cd { width: 35px; text-align: center; border-right: 1px solid var(--brd); }
         .ct { width: 80px; position: sticky; right: 0; background: var(--card); z-index: 40; border-left: 2px solid var(--p); text-align: center; color: var(--s); font-weight: 900; font-size: 13px; }
@@ -43,9 +45,15 @@
         .sq-a { width: 22px; height: 16px; border: 1px dashed var(--p); border-radius: 10px; margin: 3px auto; cursor: pointer; font-size: 9px; color: var(--p); display: flex; align-items: center; justify-content: center; }
         .sq-a.on { background: var(--p); color: #fff; border-style: solid; }
         
-        /* Фиксированный подвал таблицы */
-        tfoot { position: sticky; bottom: 0; z-index: 100; }
-        .f-row td { background: var(--p) !important; color: #fff !important; font-weight: 900; padding: 8px; border: none; }
+        /* ФИКС ДЛЯ МОБИЛЬНЫХ: Подвал таблицы */
+        tfoot { position: sticky; bottom: 0; z-index: 150; }
+        .f-row td { background: var(--p) !important; color: #fff !important; font-weight: 900; padding: 12px 8px; border: none; box-shadow: 0 -4px 10px rgba(0,0,0,0.3); }
+        
+        /* Учет безопасной зоны снизу (для iPhone и новых Android) */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .f-row td { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+        }
+
         .f-total { background: #fff !important; color: #000 !important; font-size: 14px; text-align: center; border-left: 2px solid #000 !important; }
     </style>
 </head>
