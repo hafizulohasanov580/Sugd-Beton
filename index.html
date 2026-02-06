@@ -2,15 +2,15 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Sugd-Beton</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sugd Beton</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --p: #f97316; --bg: #0f172a; --card: #1e293b; --txt: #f8fafc; --brd: #475569; --s: #22c55e; }
-        body.light { --bg: #f8fafc; --card: #ffffff; --txt: #0f172a; --brd: #cbd5e1; }
+        :root { --p: #f97316; --bg: #0f172a; --card: #1e293b; --txt: #f8fafc; --brd: #475569; --s: #22c55e; --sun: #ef4444; }
+        body.light { --bg: #f8fafc; --card: #ffffff; --txt: #0f172a; --brd: #cbd5e1; --sun: #dc2626; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.2s; }
         body { margin: 0; background: var(--bg); color: var(--txt); overflow: hidden; font-size: 12px; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -30,38 +30,42 @@
         .l-btn.active { background: var(--p) !important; color: #fff !important; }
         .controls { padding: 12px; display: flex; gap: 8px; background: var(--card); border-bottom: 1px solid var(--brd); }
         .txt-in { background: var(--bg); border: 1px solid var(--brd); padding: 10px; color: var(--txt); border-radius: 6px; flex: 2; outline: none; }
-        
-        /* Исправленный контейнер вида */
-        .view { width: 100vw; height: calc(100vh - 140px); overflow: auto; position: relative; -webkit-overflow-scrolling: touch; }
-        
-        table { border-collapse: separate; border-spacing: 0; width: 100%; margin-bottom: 80px; } /* Увеличен отступ снизу */
-        thead th { position: sticky; top: 0; background: var(--card); z-index: 100; padding: 10px; border-bottom: 1px solid var(--p); color: var(--txt); font-size: 11px; }
+        .view { width: 100vw; height: calc(100vh - 140px); overflow: auto; }
+        .total-footer { background: var(--p); color: white; padding: 12px 15px; font-weight: bold; text-align: center; border-top: 2px solid var(--brd); font-size: 14px; position: sticky; bottom: 0; left: 0; right: 0; z-index: 100; margin-top: auto; }
+        table { border-collapse: separate; border-spacing: 0; width: 100%; }
+        thead th { position: sticky; top: 0; background: var(--card); z-index: 50; padding: 10px; border-bottom: 1px solid var(--p); color: var(--txt); font-size: 11px; }
         .cw { position: sticky; left: 0; z-index: 60; width: 150px; background: var(--card); padding: 10px; border-right: 2px solid var(--p); font-weight: bold; }
-        .cd { width: 35px; text-align: center; border-right: 1px solid var(--brd); }
+        .cd { width: 35px; text-align: center; border-right: 1px solid var(--brd); position: relative; }
+        
+        .cd.sunday { 
+            border-right: 1px solid var(--sun) !important; 
+            background-color: rgba(239, 68, 68, 0.1) !important;
+            color: var(--sun) !important;
+        }
+        thead th.cd.sunday { background-color: rgba(239, 68, 68, 0.2) !important; }
+
         .ct { width: 80px; position: sticky; right: 0; background: var(--card); z-index: 40; border-left: 2px solid var(--p); text-align: center; color: var(--s); font-weight: 900; font-size: 13px; }
-        .sq-h { width: 24px; height: 24px; border: 1px solid var(--brd); border-radius: 5px; margin: 3px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--bg); font-size: 12px; color: var(--p); font-weight: bold; }
+        
+        /* КЛЕТКА ЧАСОВ */
+        .sq-h { width: 24px; height: 24px; border: 1px solid var(--brd); border-radius: 5px; margin: 3px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--bg); font-size: 12px; color: var(--p); font-weight: bold; user-select: none; }
+        
+        /* ЗЕЛЕНАЯ ГАЛОЧКА (8 часов) */
         .sq-h.on { background: var(--s); color: #000; border: none; }
         .sq-h.on::after { content: '✓'; }
+        
+        /* КРАСНЫЙ КРЕСТИК (Пропуск/0 часов) */
+        .sq-h.off { background: var(--sun); color: #fff; border: none; }
+        .sq-h.off::after { content: '✕'; font-weight: 900; font-size: 14px; }
+
         .sq-a { width: 22px; height: 16px; border: 1px dashed var(--p); border-radius: 10px; margin: 3px auto; cursor: pointer; font-size: 9px; color: var(--p); display: flex; align-items: center; justify-content: center; }
         .sq-a.on { background: var(--p); color: #fff; border-style: solid; }
-        
-        /* ФИКС ДЛЯ МОБИЛЬНЫХ: Подвал таблицы */
-        tfoot { position: sticky; bottom: 0; z-index: 150; }
-        .f-row td { background: var(--p) !important; color: #fff !important; font-weight: 900; padding: 12px 8px; border: none; box-shadow: 0 -4px 10px rgba(0,0,0,0.3); }
-        
-        /* Учет безопасной зоны снизу (для iPhone и новых Android) */
-        @supports (padding-bottom: env(safe-area-inset-bottom)) {
-            .f-row td { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-        }
-
-        .f-total { background: #fff !important; color: #000 !important; font-size: 14px; text-align: center; border-left: 2px solid #000 !important; }
     </style>
 </head>
 <body id="mainBody">
 
 <div id="screen-login" class="screen">
     <div class="box">
-        <div class="logo">Sugd <span>Beton</span></div>
+        <div class="logo">SUGD BETON</div>
         <button class="btn btn-white" id="btn-google">G Google (Облако)</button>
         <button class="btn btn-dark" onclick="authLocal()">💾 Только устройство</button>
     </div>
@@ -76,34 +80,39 @@
     </div>
 </div>
 
-<div id="screen-app" class="hidden">
-    <div class="header">
-        <div class="lang-s">
-            <button class="l-btn" id="l-ru" onclick="setLang('ru')">RU</button>
-            <button class="l-btn" id="l-tj" onclick="setLang('tj')">TJ</button>
-            <button class="l-btn" id="l-en" onclick="setLang('en')">EN</button>
-            <button class="l-btn" onclick="toggleTheme()" style="margin-left:8px; background:#475569">🌓</button>
+<div id="screen-app" class="hidden" style="display: flex; flex-direction: column; height: 100vh;">
+    <div style="flex-shrink: 0;">
+        <div class="header">
+            <div class="lang-s">
+                <button class="l-btn" id="l-ru" onclick="setLang('ru')">RU</button>
+                <button class="l-btn" id="l-tj" onclick="setLang('tj')">TJ</button>
+                <button class="l-btn" id="l-en" onclick="setLang('en')">EN</button>
+                <button class="l-btn" onclick="toggleTheme()" style="margin-left:8px; background:#475569">🌓</button>
+            </div>
+            <button id="btn-exit" onclick="location.reload()" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer">ВЫХОД</button>
         </div>
-        <button id="btn-exit" onclick="location.reload()" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer">ВЫХОД</button>
+
+        <div class="controls">
+            <input type="text" id="nw" class="txt-in" placeholder="Имя мастера">
+            <button onclick="addW()" style="background:var(--p); color:#fff; border:none; padding:10px 18px; border-radius:6px; font-weight:bold">OK</button>
+            <button onclick="genPDF()" style="background:#fff; color:#000; border:none; padding:10px 15px; border-radius:6px; font-weight:bold">PDF</button>
+        </div>
+        
+        <div class="controls" style="padding-top:0">
+            <select id="mS" onchange="render()" style="flex:1; background:var(--card); color:var(--txt); border:1px solid var(--brd); padding:8px; border-radius:6px;"></select>
+            <select id="yS" onchange="render()" style="flex:1; background:var(--card); color:var(--txt); border:1px solid var(--brd); padding:8px; border-radius:6px;"></select>
+        </div>
     </div>
 
-    <div class="controls">
-        <input type="text" id="nw" class="txt-in" placeholder="Имя мастера">
-        <button onclick="addW()" style="background:var(--p); color:#fff; border:none; padding:10px 18px; border-radius:6px; font-weight:bold">OK</button>
-        <button onclick="genPDF()" style="background:#fff; color:#000; border:none; padding:10px 15px; border-radius:6px; font-weight:bold">PDF</button>
-    </div>
-    
-    <div class="controls" style="padding-top:0">
-        <select id="mS" onchange="render()" style="flex:1; background:var(--card); color:var(--txt); border:1px solid var(--brd); padding:8px; border-radius:6px;"></select>
-        <select id="yS" onchange="render()" style="flex:1; background:var(--card); color:var(--txt); border:1px solid var(--brd); padding:8px; border-radius:6px;"></select>
-    </div>
-
-    <div class="view">
+    <div class="view" style="flex: 1; overflow: auto;">
         <table>
             <thead><tr id="hRow"><th class="cw" id="th-m">МАСТЕР</th><th class="ct" id="th-t">ИТОГО</th></tr></thead>
             <tbody id="tBody"></tbody>
-            <tfoot id="tFoot"></tfoot>
         </table>
+    </div>
+    
+    <div class="total-footer" id="totalFooter">
+        ИТОГО ЗАРПЛАТА: 0 TJS
     </div>
 </div>
 
@@ -121,9 +130,9 @@
     let mode = 'local', userUid = 'local_user', pinCode = null, workers = [], curL = 'ru';
 
     const dict = {
-        ru: { m: "МАСТЕР", t: "ИТОГО", h: "Часы", r: "Ставка", ph: "Имя мастера", exit: "ВЫХОД", pinT: "Введите PIN", pinN: "Придумайте PIN", enter: "ВХОД", adv: "Аванс:", qh: "Часы (0-24):", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"], all: "ИТОГО ВСЕГО:" },
-        tj: { m: "УСТО", t: "ҶАЪМ", h: "Соат", r: "Нарх", ph: "Номи усто", exit: "ХУРУҶ", pinT: "Рамзро нависед", pinN: "Рамзи нав", enter: "ВОРУД", adv: "Аванс:", qh: "Соат (0-24):", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"], all: "ҶАЪМИ УМУМӢ:" },
-        en: { m: "MASTER", t: "TOTAL", h: "Hrs", r: "Rate", ph: "Master Name", exit: "EXIT", pinT: "Enter PIN", pinN: "Create PIN", enter: "LOGIN", adv: "Adv:", qh: "Hours (0-24):", mo: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], all: "GRAND TOTAL:" }
+        ru: { m: "МАСТЕР", t: "ИТОГО", h: "Часы", r: "Ставка", ph: "Имя мастера", exit: "ВЫХОД", pinT: "Введите PIN", pinN: "Придумайте PIN", enter: "ВХОД", adv: "Аванс:", qh: "Часы (0-24):", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"], total: "ИТОГО ЗАРПЛАТА:" },
+        tj: { m: "УСТО", t: "ҶАЪМ", h: "Соат", r: "Нарх", ph: "Номи усто", exit: "ХУРУҶ", pinT: "Рамзро нависед", pinN: "Рамзи нав", enter: "ВОРУД", adv: "Аванс:", qh: "Соат (0-24):", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"], total: "ҶАЪМИ МАОШ:" },
+        en: { m: "MASTER", t: "TOTAL", h: "Hrs", r: "Rate", ph: "Master Name", exit: "EXIT", pinT: "Enter PIN", pinN: "Create PIN", enter: "LOGIN", adv: "Adv:", qh: "Hours (0-24):", mo: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], total: "TOTAL SALARY:" }
     };
 
     window.toggleTheme = () => document.getElementById('mainBody').classList.toggle('light');
@@ -184,43 +193,73 @@
         const y=yS.value, m=mS.value, days=new Date(y, parseInt(m)+1, 0).getDate();
         const hr = document.getElementById('hRow');
         while(hr.children.length > 2) hr.removeChild(hr.children[1]);
-        for(let d=1; d<=days; d++) { let th = document.createElement('th'); th.className='cd'; th.innerText=d; hr.insertBefore(th, hr.children[d]); }
+        
+        for(let d=1; d<=days; d++) { 
+            let th = document.createElement('th'); 
+            th.className='cd'; 
+            th.innerText=d; 
+            const dayOfWeek = new Date(y, parseInt(m), d).getDay();
+            if(dayOfWeek === 0) th.classList.add('sunday');
+            hr.insertBefore(th, hr.children[d]); 
+        }
         
         const tb = document.getElementById('tBody'); tb.innerHTML = '';
         let grandTotal = 0;
-
+        
         workers.forEach((w, idx) => {
             let total = 0, hours = 0;
             let html = `<td class="cw">${w.n}<br><small>${dict[curL].h}: <span id="th_${idx}">0</span></small><br><input type="number" value="${w.r}" onchange="updR(${idx},this.value)"><br><span onclick="delW(${idx})" style="color:#ef4444;cursor:pointer;font-size:9px">УДАЛИТЬ</span></td>`;
+            
             for(let d=1; d<=days; d++) {
                 let k=`${y}_${m}_${d}`, h=w.d[k]?.h||0, a=w.d[k]?.a||0;
-                hours+=h; total+=(h*(w.r/8))-a;
-                html += `<td class="cd">
-                    <div class="sq-h ${h==8?'on':''}" onclick="setH(${idx},'${k}',8)" oncontextmenu="setCus(event,${idx},'${k}')">${(h>0&&h!=8)?h:''}</div>
+                
+                // h = -1 это крестик, считается как 0
+                let calcH = (h > 0) ? h : 0; 
+                hours += calcH; 
+                total += (calcH * (w.r/8)) - a;
+                
+                const dayOfWeek = new Date(y, parseInt(m), d).getDay();
+                const isSunday = dayOfWeek === 0;
+                
+                // Классы для отображения
+                let cellClass = '';
+                if(h === 8) cellClass = 'on'; // Зеленая галочка
+                else if(h === -1) cellClass = 'off'; // Красный крестик
+
+                // Текст внутри (если не галочка и не крестик)
+                let cellText = (h > 0 && h !== 8) ? h : '';
+
+                html += `<td class="cd ${isSunday ? 'sunday' : ''}">
+                    <div class="sq-h ${cellClass}" onclick="setH(${idx},'${k}')" oncontextmenu="setCus(event,${idx},'${k}')">${cellText}</div>
                     <div class="sq-a ${a>0?'on':''}" onclick="setA(${idx},'${k}')">${a>0?a:'$'}</div>
                 </td>`;
             }
-            grandTotal += total;
             html += `<td class="ct">${fN(total)}</td>`;
             let row = document.createElement('tr'); row.innerHTML = html; tb.appendChild(row);
             setTimeout(() => { let el=document.getElementById(`th_${idx}`); if(el) el.innerText = hours; }, 0);
+            grandTotal += total;
         });
-
-        const tf = document.getElementById('tFoot');
-        tf.innerHTML = `
-            <tr class="f-row">
-                <td class="cw" style="position:sticky; left:0; z-index:110;">${dict[curL].all}</td>
-                <td colspan="${days}"></td>
-                <td class="f-total" style="position:sticky; right:0; z-index:110;">${fN(grandTotal)}</td>
-            </tr>
-        `;
+        
+        document.getElementById('totalFooter').innerText = `${dict[curL].total} ${fN(grandTotal)} TJS`;
     }
 
-    window.saveData = async () => { if(mode==='local') localStorage.setItem('mp_data',JSON.stringify(workers)); else await setDoc(doc(db,"data",userUid),{w:workers}); }
+    window.saveData = async () => { if(mode==='local') localStorage.setItem('mp_data',JSON.stringify(workers)); else await setDoc(doc(db,"data",userUid),{w:workers}); render(); }
     window.updR = (i,v) => { workers[i].r = v; saveData(); render(); }
     window.delW = (i) => { if(confirm('Удалить?')) { workers.splice(i,1); saveData(); render(); } }
-    window.setH = (i,k,v) => { if(!workers[i].d[k]) workers[i].d[k]={}; workers[i].d[k].h=(workers[i].d[k].h===8?0:8); saveData(); render(); }
     
+    // --- НОВАЯ ЛОГИКА НАЖАТИЯ (ЦИКЛ: 0 -> 8 -> -1 -> 0) ---
+    window.setH = (i,k) => { 
+        if(!workers[i].d[k]) workers[i].d[k]={};
+        let cur = workers[i].d[k].h || 0;
+        
+        if(cur === 0) workers[i].d[k].h = 8;        // Было пусто -> стало 8 (Зеленая галочка)
+        else if(cur === 8) workers[i].d[k].h = -1;  // Было 8 -> стал Крестик (Красный)
+        else workers[i].d[k].h = 0;                 // Был Крестик или другое -> стало Пусто
+
+        saveData(); render(); 
+    }
+    
+    // Долгое нажатие (оставил как было)
     window.setCus = (e,i,k) => { 
         e.preventDefault(); 
         let v = prompt(dict[curL].qh); 
@@ -240,7 +279,7 @@
         const m = mS.value;
         const monthName = dict[curL].mo[m];
 
-        docP.text("Sugd - Beton", 105, 10, {align:"center"});
+        docP.text("SUGD BETON", 105, 10, {align:"center"});
         docP.text(`${monthName} ${y}`, 105, 18, {align:"center"});
 
         let rows = workers.map(w => {
@@ -250,18 +289,36 @@
                 let k = `${y}_${m}_${d}`;
                 let h = w.d[k]?.h || 0;
                 let a = w.d[k]?.a || 0;
-                h_sum += h;
-                t += (h * (w.r/8)) - a;
+                let calcH = (h > 0) ? h : 0; // Игнорируем крестик (-1)
+                h_sum += calcH;
+                t += (calcH * (w.r/8)) - a;
             }
             return [tr(w.n), h_sum, fN(t) + " TJS"];
         });
+
+        // Итоговая строка
+        let grandTotal = workers.reduce((sum, w) => {
+            let t=0; 
+            const daysInMonth = new Date(y, parseInt(m)+1, 0).getDate();
+            for(let d=1; d<=daysInMonth; d++){
+                let k = `${y}_${m}_${d}`;
+                let h = w.d[k]?.h || 0;
+                let a = w.d[k]?.a || 0;
+                let calcH = (h > 0) ? h : 0;
+                t += (calcH * (w.r/8)) - a;
+            }
+            return sum + t;
+        }, 0);
+        
+        rows.push(['ИТОГО', '', fN(grandTotal) + " TJS"]);
 
         docP.autoTable({ 
             head: [['Master', 'Hours', 'Total']], 
             body: rows, 
             startY: 25,
             theme: 'grid',
-            headStyles: { fillColor: [249, 115, 22] }
+            headStyles: { fillColor: [249, 115, 22] },
+            footStyles: { fillColor: [249, 115, 22], textColor: [255, 255, 255], fontStyle: 'bold' }
         });
         docP.save(`Report_${monthName}_${y}.pdf`);
     }
