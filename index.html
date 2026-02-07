@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sugd Beton</title>
+    <title>SUGD BETON</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --p: #f97316; --bg: #0f172a; --card: #1e293b; --txt: #f8fafc; --brd: #475569; --s: #22c55e; --sun: #ef4444; }
-        body.light { --bg: #f8fafc; --card: #ffffff; --txt: #0f172a; --brd: #cbd5e1; --sun: #dc2626; }
+        :root { --p: #f97316; --bg: #0f172a; --card: #1e293b; --txt: #f8fafc; --brd: #475569; --s: #22c55e; --sun: #ff0000; }
+        body.light { --bg: #f8fafc; --card: #ffffff; --txt: #0f172a; --brd: #cbd5e1; --sun: #ff0000; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.2s; }
         
         body { margin: 0; background: var(--bg); color: var(--txt); font-size: 12px; height: 100vh; display: flex; flex-direction: column; }
@@ -28,14 +28,12 @@
         .btn-dark { background: #334155; color: #fff; border: 1px solid var(--brd); }
         .btn-orange { background: var(--p); color: #fff; }
         
-        /* ГЛАВНАЯ ПАНЕЛЬ С КНОПКАМИ */
         .header { background: var(--card); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--p); flex-shrink: 0; gap: 8px; }
         .lang-s { display: flex; gap: 4px; align-items: center; }
         .l-btn { background: var(--brd); padding: 6px 8px; border-radius: 6px; border: none; color: #fff; cursor: pointer; font-size: 11px; font-weight: bold; }
         .l-btn.active { background: var(--p) !important; color: #fff !important; }
         .btn-act { background: #fff; color: #000; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; }
 
-        /* ВТОРАЯ СТРОКА: ВЫБОР ДАТЫ */
         .date-panel { padding: 8px 12px; display: flex; gap: 8px; background: var(--card); border-bottom: 1px solid var(--brd); flex-shrink: 0; }
         select { flex: 1; background: var(--bg); color: var(--txt); border: 1px solid var(--brd); padding: 6px; border-radius: 6px; outline: none; font-size: 12px; }
 
@@ -48,8 +46,9 @@
         .cw { position: sticky; left: 0; z-index: 60; width: 150px; background: var(--card); padding: 10px; border-right: 2px solid var(--p); font-weight: bold; line-height: 1.2; }
         .cd { width: 35px; text-align: center; border-right: 1px solid var(--brd); position: relative; }
         
-        .cd.sunday { background-color: rgba(239, 68, 68, 0.1) !important; color: var(--sun) !important; }
-        thead th.cd.sunday { background-color: rgba(239, 68, 68, 0.2) !important; }
+        /* КРАСНЫЙ ФОН ДЛЯ ВОСКРЕСЕНЬЯ */
+        .cd.sunday { background-color: rgba(255, 0, 0, 0.35) !important; color: #ff3333 !important; font-weight: bold; }
+        thead th.cd.sunday { background-color: #ff0000 !important; color: #ffffff !important; }
 
         .ct { width: 80px; position: sticky; right: 0; background: var(--card); z-index: 40; border-left: 2px solid var(--p); text-align: center; color: var(--s); font-weight: 900; font-size: 13px; }
         
