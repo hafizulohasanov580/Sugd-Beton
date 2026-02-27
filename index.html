@@ -111,84 +111,59 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
     const provider = new GoogleAuthProvider();
-    // Мы заставляем Google ВСЕГДА спрашивать аккаунт
     provider.setCustomParameters({ prompt: 'select_account' });
 
     let mode = 'local', userUid = 'local_user', pinCode = null, workers = [], curL = 'ru';
 
     const dict = {
-        ru: { m: "МАСТЕР", t: "ИТОГО", h: "Ч", r: "Ст", ph: "Имя мастера", exit: "ВЫХОД", pinT: "Введите PIN", pinN: "Новый PIN", enter: "ВХОД", adv: "Аванс:", qh: "Часы:", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"], total: "ИТОГО ЗАРПЛАТА:" },
-        tj: { m: "УСТО", t: "ҶАЪМ", h: "С", r: "Н", ph: "Номи усто", exit: "ХУРУҶ", pinT: "Рамз", pinN: "Рамзи нав", enter: "ВОРУД", adv: "Аванс:", qh: "Соат:", mo: ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"], total: "ҶАЪМИ МАОШ:" },
-        en: { m: "MASTER", t: "TOTAL", h: "H", r: "R", ph: "Name", exit: "EXIT", pinT: "PIN", pinN: "New PIN", enter: "LOGIN", adv: "Adv:", qh: "Hours:", mo: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], total: "TOTAL SALARY:" }
+        ru: { m: "МАСТЕР", t: "ИТОГО", h: "Ч", d: "Д", r: "Ст", ph: "Имя мастера", exit: "ВЫХОД", pinT: "Введите PIN", pinN: "Новый PIN", enter: "ВХОД", adv: "Аванс:", qh: "Часы:", mo: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"], total: "ИТОГО ЗАРПЛАТА:", rep: "REPORT FOR" },
+        tj: { m: "УСТО", t: "ҶАЪМ", h: "С", d: "Р", r: "Н", ph: "Номи усто", exit: "ХУРУҶ", pinT: "Рамз", pinN: "Рамзи нав", enter: "ВОРУД", adv: "Аванс:", qh: "Соат:", mo: ["Январ","Феврал","Март","Апрел","Май","Июн","Июл","Август","Сентябр","Октябр","Ноябр","Декабр"], total: "ҶАЪМИ МАОШ:", rep: "REPORT FOR" },
+        en: { m: "MASTER", t: "TOTAL", h: "H", d: "D", r: "R", ph: "Name", exit: "EXIT", pinT: "PIN", pinN: "New PIN", enter: "LOGIN", adv: "Adv:", qh: "Hours:", mo: ["January","February","March","April","May","June","July","August","September","October","November","December"], total: "TOTAL SALARY:", rep: "REPORT FOR" }
     };
+
+    // Специальный список месяцев на английском для PDF
+    const engMonths = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
     window.toggleTheme = () => document.getElementById('mainBody').classList.toggle('light');
     window.fN = (n) => Math.round(n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     
     window.authLocal = () => { mode = 'local'; localStorage.setItem('user_mode', 'local'); checkPinSetup(); }
-
     document.getElementById('btn-google').onclick = async () => {
         try {
             const result = await signInWithPopup(auth, provider);
-            mode = 'cloud'; 
-            userUid = result.user.uid; 
-            localStorage.setItem('user_mode', 'cloud'); 
-            localStorage.setItem('user_uid', result.user.uid); 
-            await checkPinSetup(); 
-        } catch (e) {
-            console.error(e);
-            alert("Ошибка входа: " + e.message + "\nПопробуйте открыть через Live Server или загрузить на хостинг.");
-        }
+            mode = 'cloud'; userUid = result.user.uid;
+            localStorage.setItem('user_mode', 'cloud'); localStorage.setItem('user_uid', result.user.uid);
+            await checkPinSetup();
+        } catch (e) { alert("Ошибка входа!"); }
     };
 
-    window.fullExit = () => { 
-        localStorage.clear(); 
-        signOut(auth).then(() => location.reload()); 
-    };
+    window.fullExit = () => { localStorage.clear(); signOut(auth).then(() => location.reload()); };
 
     async function checkPinSetup() {
         pinCode = null;
-        if(mode === 'local') {
-            pinCode = localStorage.getItem('mp_pin');
-        } else {
-            const ds = await getDoc(doc(db, "users", userUid));
-            if(ds.exists()) pinCode = ds.data().pin;
-        }
-        
+        if(mode === 'local') pinCode = localStorage.getItem('mp_pin');
+        else { const ds = await getDoc(doc(db, "users", userUid)); if(ds.exists()) pinCode = ds.data().pin; }
         document.getElementById('screen-login').classList.add('hidden');
         document.getElementById('screen-pin').classList.remove('hidden');
         document.getElementById('pin-title').innerText = pinCode ? dict[curL].pinT : dict[curL].pinN;
-        document.getElementById('pin-input').value = "";
     }
 
     window.checkPin = async function() {
         const v = document.getElementById('pin-input').value;
         if(!v) return;
-        if(!pinCode) { 
-            pinCode = v; 
-            if(mode==='local') localStorage.setItem('mp_pin',v); 
-            else await setDoc(doc(db,"users",userUid),{pin:v}); 
-            await loadData(); 
-        } else {
-            if(v === pinCode) await loadData(); else alert("Неверный PIN!");
-        }
+        if(!pinCode) { pinCode = v; if(mode==='local') localStorage.setItem('mp_pin',v); else await setDoc(doc(db,"users",userUid),{pin:v}); await loadData(); }
+        else { if(v === pinCode) await loadData(); else alert("Неверный PIN!"); }
     }
 
     async function loadData() {
         document.getElementById('screen-pin').classList.add('hidden');
         document.getElementById('screen-app').classList.remove('hidden');
-        if(mode === 'local') {
-            workers = JSON.parse(localStorage.getItem('mp_data')) || [];
-        } else {
-            const ds = await getDoc(doc(db,"data",userUid));
-            workers = ds.exists() ? (ds.data().w || []) : [];
-        }
+        if(mode === 'local') workers = JSON.parse(localStorage.getItem('mp_data')) || [];
+        else { const ds = await getDoc(doc(db,"data",userUid)); workers = ds.exists() ? (ds.data().w || []) : []; }
         render();
     }
 
-    // --- Дальше идут стандартные функции отрисовки (render, addW, saveData и т.д.) ---
     window.setLang = (l) => {
         curL = l;
         document.querySelectorAll('.l-btn').forEach(b => b.classList.remove('active'));
@@ -196,34 +171,50 @@
         document.getElementById('th-m').innerText = dict[l].m;
         document.getElementById('th-t').innerText = dict[l].t;
         document.getElementById('btn-exit').innerText = dict[l].exit;
+        
         const mS = document.getElementById('mS');
-        const sel = mS.value; mS.innerHTML = '';
-        dict[l].mo.forEach((m,i)=>mS.add(new Option(m,i,false,i===parseInt(sel||new Date().getMonth()))));
+        const currentSelectedMonth = mS.value !== "" ? mS.value : new Date().getMonth();
+        mS.innerHTML = '';
+        dict[l].mo.forEach((mName, i) => {
+            let opt = new Option(mName, i);
+            if(i == currentSelectedMonth) opt.selected = true;
+            mS.add(opt);
+        });
         render();
     }
 
-    window.addW = () => {
-        let n = prompt(dict[curL].ph);
-        if(n) { workers.push({n:n, r:170, d:{}}); saveData(); }
-    }
+    window.addW = () => { let n = prompt(dict[curL].ph); if(n) { workers.push({n:n, r:170, d:{}}); saveData(); } }
 
     window.render = function() {
-        const y=yS.value, m=mS.value, days=new Date(y, parseInt(m)+1, 0).getDate();
+        const mS = document.getElementById('mS');
+        const yS = document.getElementById('yS');
+        if(!mS.options.length) return;
+
+        const y = yS.value, m = mS.value;
+        const days = new Date(y, parseInt(m)+1, 0).getDate();
         const hr = document.getElementById('hRow');
+        
         while(hr.children.length > 2) hr.removeChild(hr.children[1]);
         for(let d=1; d<=days; d++) { 
             let th = document.createElement('th'); th.className='cd'; th.innerText=d; 
             if(new Date(y, parseInt(m), d).getDay() === 0) th.classList.add('sunday');
             hr.insertBefore(th, hr.children[d]); 
         }
+        
         const tb = document.getElementById('tBody'); tb.innerHTML = '';
         let grandTotal = 0;
+        
         workers.forEach((w, idx) => {
             let total = 0, hours = 0;
-            let html = `<td class="cw">${w.n}<br><small>${dict[curL].h}:<span id="th_${idx}">0</span></small> <input type="number" value="${w.r}" onchange="updR(${idx},this.value)"><br><span onclick="delW(${idx})" style="color:var(--sun);cursor:pointer;font-size:9px">УДАЛИТЬ</span></td>`;
             for(let d=1; d<=days; d++) {
                 let k=`${y}_${m}_${d}`, h=w.d[k]?.h||0, a=w.d[k]?.a||0;
-                let calcH = (h > 0) ? h : 0; hours += calcH; total += (calcH * (w.r/8)) - a;
+                let cH = h > 0 ? h : 0; hours += cH; total += (cH * (w.r/8)) - a;
+            }
+            let dVal = (hours / 8).toFixed(1).replace('.0', '');
+            
+            let html = `<td class="cw">${w.n}<br><small>${dict[curL].h}:${hours} | ${dict[curL].d}:${dVal}</small><br><input type="number" value="${w.r}" onchange="updR(${idx},this.value)"><br><span onclick="delW(${idx})" style="color:var(--sun);cursor:pointer;font-size:9px">УДАЛИТЬ</span></td>`;
+            for(let d=1; d<=days; d++) {
+                let k=`${y}_${m}_${d}`, h=w.d[k]?.h||0, a=w.d[k]?.a||0;
                 let cellClass = h === 8 ? 'on' : (h === -1 ? 'off' : '');
                 let cellText = (h > 0 && h !== 8) ? h : '';
                 html += `<td class="cd ${new Date(y, parseInt(m), d).getDay()===0?'sunday':''}">
@@ -233,7 +224,6 @@
             }
             html += `<td class="ct">${fN(total)}</td>`;
             let row = document.createElement('tr'); row.innerHTML = html; tb.appendChild(row);
-            setTimeout(() => { let el=document.getElementById(`th_${idx}`); if(el) el.innerText = hours; }, 0);
             grandTotal += total;
         });
         document.getElementById('totalFooter').innerText = `${dict[curL].total} ${fN(grandTotal)} TJS`;
@@ -247,25 +237,55 @@
     window.setA = (i,k) => { let v=prompt(dict[curL].adv); if(v!==null){ if(!workers[i].d[k])workers[i].d[k]={}; workers[i].d[k].a=parseFloat(v)||0; saveData(); } }
 
     window.genPDF = () => {
-        const { jsPDF } = window.jspdf; const docP = new jsPDF(); const y = yS.value, m = mS.value;
-        docP.text(`SUGD BETON - ${dict[curL].mo[m]} ${y}`, 105, 15, {align:"center"});
+        const { jsPDF } = window.jspdf;
+        const docP = new jsPDF('l', 'mm', 'a4');
+        const y = document.getElementById('yS').value, m = document.getElementById('mS').value;
+        
+        // Берем месяц из английского списка
+        const monthNameEng = engMonths[m];
+        
+        const trN = (s) => {
+            const map = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'j','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ы':'y','э':'e','ю':'yu','я':'ya','ҷ':'j','қ':'q','ҳ':'h','ӯ':'u','ғ':'gh'};
+            return s.toLowerCase().split('').map(c => map[c] || c).join('').toUpperCase();
+        };
+
+        docP.setFontSize(18);
+        docP.setTextColor(249, 115, 22);
+        
+        // Заголовок PDF на английском
+        docP.text(`SUGD BETON: REPORT FOR ${monthNameEng} ${y}`, 148, 15, {align:"center"});
+        
+        let grandTotal = 0;
         let rows = workers.map(w => {
-            let t=0, h_s=0; for(let d=1; d<=new Date(y, parseInt(m)+1, 0).getDate(); d++){
+            let t=0, hs=0, adv=0; 
+            for(let d=1; d<=new Date(y, parseInt(m)+1, 0).getDate(); d++){
                 let k = `${y}_${m}_${d}`, h = w.d[k]?.h || 0, a = w.d[k]?.a || 0;
-                let cH = h > 0 ? h : 0; h_s += cH; t += (cH * (w.r/8)) - a;
-            } 
-            const trN = (s) => {
-                const map = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'j','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ы':'y','э':'e','ю':'yu','я':'ya','ҷ':'j','қ':'q','ҳ':'h','ӯ':'u','ғ':'gh'};
-                return s.toLowerCase().split('').map(c => map[c] || c).join('').toUpperCase();
-            };
-            return [trN(w.n), h_s, fN(t) + " TJS"];
+                let cH = h > 0 ? h : 0; hs += cH; adv += a;
+                t += (cH * (w.r/8)) - a;
+            }
+            grandTotal += t;
+            return [trN(w.n), w.r, hs, (hs/8).toFixed(1).replace('.0',''), fN(adv), fN(t) + " TJS"];
         });
-        docP.autoTable({ head: [['Master', 'Hours', 'Total']], body: rows, startY: 25, theme: 'grid', headStyles: { fillColor: [249, 115, 22] } });
-        docP.save(`Report_${y}_${m}.pdf`);
+
+        rows.push([{ content: 'GRAND TOTAL:', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } }, { content: fN(grandTotal) + " TJS", styles: { fontStyle: 'bold', fillColor: [249, 115, 22], textColor: 255 } }]);
+
+        docP.autoTable({ 
+            head: [['Master Name', 'Rate/D', 'Hours', 'Days(8h)', 'Advance', 'Total']], 
+            body: rows, 
+            startY: 25, 
+            theme: 'grid', 
+            headStyles: { fillColor: [249, 115, 22], halign: 'center' },
+            styles: { fontSize: 10, halign: 'center' },
+            columnStyles: { 0: { halign: 'left' } }
+        });
+        
+        // Сохранение файла с английским названием месяца
+        docP.save(`Sugd_Beton_${monthNameEng}_${y}.pdf`);
     }
 
-    const mS=document.getElementById('mS'), yS=document.getElementById('yS');
+    const yS=document.getElementById('yS');
     for(let y=2025; y<=2028; y++) yS.add(new Option(y, y, false, y===new Date().getFullYear()));
+
     if(localStorage.getItem('user_mode')) { 
         mode = localStorage.getItem('user_mode'); 
         userUid = localStorage.getItem('user_uid') || 'local_user'; 
