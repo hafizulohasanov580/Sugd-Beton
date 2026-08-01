@@ -12,9 +12,9 @@
         :root { --p: #f97316; --bg: #0f172a; --card: #1e293b; --txt: #f8fafc; --brd: #475569; --s: #22c55e; --sun: #ef4444; --pay: #3b82f6; }
         body.light { --bg: #f8fafc; --card: #ffffff; --txt: #0f172a; --brd: #cbd5e1; --sun: #ef4444; }
         
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: background 0.1s; touch-action: manipulation; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: background 0.1s; -webkit-tap-highlight-color: transparent; }
         
-        body { margin: 0; background: var(--bg); color: var(--txt); font-size: 12px; height: 100vh; display: flex; flex-direction: column; }
+        body { margin: 0; background: var(--bg); color: var(--txt); font-size: 12px; height: 100vh; display: flex; flex-direction: column; user-select: none; }
         
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; border:none; border-bottom: 1px solid var(--brd); background: transparent; color: var(--p); font-weight: bold; width: 50px; text-align: center; outline: none; }
@@ -62,11 +62,10 @@
         .sq-h.off { background: var(--sun); color: #fff; border: none; }
         .sq-h.off::after { content: '✕'; font-weight: 900; font-size: 14px; }
 
-        .sq-a { width: 22px; height: 16px; border: 1px dashed var(--p); border-radius: 10px; margin: 3px auto; cursor: pointer; font-size: 9px; color: var(--p); display: flex; align-items: center; justify-content: center; user-select: none; }
+        .sq-a { width: 22px; height: 16px; border: 1px dashed var(--p); border-radius: 10px; margin: 3px auto; cursor: pointer; font-size: 9px; color: var(--p); display: flex; align-items: center; justify-content: center; user-select: none; touch-action: none; }
         .sq-a.on-adv { background: var(--p); color: #fff; border-style: solid; }
         .sq-a.on-pay { background: var(--pay); color: #fff; border-style: solid; }
 
-        /* Стиль для всплывающего окна выплаты */
         .modal-btn-group { display: flex; gap: 12px; margin-top: 20px; }
         .btn-yes { background: var(--s); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; flex: 1; cursor: pointer; font-size: 15px; }
         .btn-no { background: var(--sun); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; flex: 1; cursor: pointer; font-size: 15px; }
@@ -145,6 +144,8 @@
 
     let mode = 'local', userUid = 'local_user', pinCode = null, workers = [], curL = 'ru';
     let activePayTarget = null;
+    let holdTimer = null;
+    let isLongPress = false;
 
     const dict = {
         ru: { m: "МАСТЕР", t: "ИТОГО", h: "Ч", d: "Д", r: "Ст", ph: "Имя мастера", exit: "ВЫХОД", pinT: "Введите PIN", pinN: "Новый PIN", enter: "ВХОД", adv: "Сумма аванса:", qh: "Часы:", mo: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"], total: "ФОНД ЗП:", totAdv: "АВАНСЫ:", totPaid: "ВЫПЛАЧЕНО:", totBal: "ОСТАТОК:" },
@@ -215,10 +216,7 @@
         }
         
         const tb = document.getElementById('tBody'); tb.innerHTML = '';
-        let grandAccrued = 0;
-        let grandAdvance = 0;
-        let grandPaid = 0;
-        let grandBalance = 0;
+        let grandAccrued = 0, grandAdvance = 0, grandPaid = 0, grandBalance = 0;
         
         workers.forEach((w, idx) => {
             let total = 0, hours = 0, advanceSum = 0, paidSum = 0;
@@ -254,10 +252,13 @@
                     sqVal = a;
                 }
 
-                /* Левый клик по $ = аванс, Правый клик = выплата ЗП */
-                html += `<td class="cd ${new Date(y, parseInt(m), d).getDay()===0?'sunday':''}">
+                html += `<td class="cd ${new Date(y, parseInt(m), d).getDay()===0?'sunday':''}" oncontextmenu="return false;">
                     <div class="sq-h ${cellClass}" onpointerdown="fastH(event, ${idx},'${k}')" oncontextmenu="setCus(event,${idx},'${k}')">${cellText}</div>
-                    <div class="${sqClass}" onpointerdown="fastA(event, ${idx},'${k}')" oncontextmenu="openPayModal(event, ${idx},'${k}', ${total})">${sqVal}</div>
+                    <div class="${sqClass}" 
+                         onpointerdown="handleTouchStart(event, ${idx}, '${k}', ${total})" 
+                         onpointerup="handleTouchEnd(event, ${idx}, '${k}')"
+                         onpointercancel="handleTouchCancel()"
+                         oncontextmenu="openPayModal(event, ${idx},'${k}', ${total})">${sqVal}</div>
                 </td>`;
             }
             html += `<td class="ct">${fN(total)}</td>`;
@@ -265,23 +266,32 @@
         });
 
         document.getElementById('totalFooter').innerHTML = `
-            <div class="tf-item">
-                <span class="tf-title">${dict[curL].total}</span>
-                <span class="tf-val">${fN(grandAccrued)}</span>
-            </div>
-            <div class="tf-item">
-                <span class="tf-title">${dict[curL].totAdv}</span>
-                <span class="tf-val">${fN(grandAdvance)}</span>
-            </div>
-            <div class="tf-item">
-                <span class="tf-title">${dict[curL].totPaid}</span>
-                <span class="tf-val" style="color:#60a5fa">${fN(grandPaid)}</span>
-            </div>
-            <div class="tf-item">
-                <span class="tf-title">${dict[curL].totBal}</span>
-                <span class="tf-val">${fN(grandBalance)}</span>
-            </div>
+            <div class="tf-item"><span class="tf-title">${dict[curL].total}</span><span class="tf-val">${fN(grandAccrued)}</span></div>
+            <div class="tf-item"><span class="tf-title">${dict[curL].totAdv}</span><span class="tf-val">${fN(grandAdvance)}</span></div>
+            <div class="tf-item"><span class="tf-title">${dict[curL].totPaid}</span><span class="tf-val" style="color:#60a5fa">${fN(grandPaid)}</span></div>
+            <div class="tf-item"><span class="tf-title">${dict[curL].totBal}</span><span class="tf-val">${fN(grandBalance)}</span></div>
         `;
+    }
+
+    window.handleTouchStart = (e, i, k, total) => {
+        if (e.button && e.button !== 0) return;
+        isLongPress = false;
+        holdTimer = setTimeout(() => {
+            isLongPress = true;
+            if (navigator.vibrate) navigator.vibrate(50);
+            window.openPayModal(e, i, k, total);
+        }, 500);
+    }
+
+    window.handleTouchEnd = (e, i, k) => {
+        clearTimeout(holdTimer);
+        if (!isLongPress && e.button === 0) {
+            setTimeout(() => window.fastA(i, k), 50);
+        }
+    }
+
+    window.handleTouchCancel = () => {
+        clearTimeout(holdTimer);
     }
 
     window.saveData = async () => { 
@@ -304,9 +314,7 @@
         saveData();
     }
 
-    /* Обычный ввод аванса при ЛЕВОМ клике */
-    window.fastA = (e, i, k) => {
-        if (e.button !== 0) return;
+    window.fastA = (i, k) => {
         let v = prompt(dict[curL].adv); 
         if(v !== null) { 
             if(!workers[i].d[k]) workers[i].d[k] = {}; 
@@ -317,9 +325,8 @@
         }
     }
 
-    /* Всплывающее окно при ПРАВОМ клике */
     window.openPayModal = (e, i, k, remaining) => {
-        e.preventDefault(); // Запрещаем стандартное контекстное меню браузера
+        if(e) e.preventDefault();
         if(remaining <= 0 && (!workers[i].d[k] || !workers[i].d[k].p)) {
             alert("У мастера нет остатка к выплате!");
             return;
@@ -342,7 +349,7 @@
             const { i, k, amount } = activePayTarget;
             if(!workers[i].d[k]) workers[i].d[k] = {};
             workers[i].d[k].p = amount;
-            workers[i].d[k].a = 0; // Очищаем аванс за этот день, если заменяется выплатой
+            workers[i].d[k].a = 0;
             saveData();
         }
         closePayModal();
