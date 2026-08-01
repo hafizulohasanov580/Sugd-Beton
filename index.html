@@ -38,7 +38,7 @@
         .date-panel { padding: 8px 12px; display: flex; gap: 8px; background: var(--card); border-bottom: 1px solid var(--brd); flex-shrink: 0; }
         select { flex: 1; background: var(--bg); color: var(--txt); border: 1px solid var(--brd); padding: 6px; border-radius: 6px; outline: none; font-size: 12px; }
 
-        .view { flex: 1; overflow: auto; width: 100%; position: relative; }
+        .view { flex: 1; overflow: auto; width: 100%; position: relative; -webkit-overflow-scrolling: touch; }
         
         .total-footer { background: var(--p); color: white; padding: 8px 10px; font-weight: bold; border-top: 2px solid var(--brd); font-size: 12px; flex-shrink: 0; z-index: 110; display: flex; justify-content: space-between; align-items: center; text-align: center; }
         .tf-item { display: flex; flex-direction: column; gap: 2px; flex: 1; }
@@ -62,7 +62,7 @@
         .sq-h.off { background: var(--sun); color: #fff; border: none; }
         .sq-h.off::after { content: '✕'; font-weight: 900; font-size: 14px; }
 
-        .sq-a { width: 22px; height: 16px; border: 1px dashed var(--p); border-radius: 10px; margin: 3px auto; cursor: pointer; font-size: 9px; color: var(--p); display: flex; align-items: center; justify-content: center; user-select: none; touch-action: none; }
+        .sq-a { width: 22px; height: 16px; border: 1px dashed var(--p); border-radius: 10px; margin: 3px auto; cursor: pointer; font-size: 9px; color: var(--p); display: flex; align-items: center; justify-content: center; user-select: none; }
         .sq-a.on-adv { background: var(--p); color: #fff; border-style: solid; }
         .sq-a.on-pay { background: var(--pay); color: #fff; border-style: solid; }
 
@@ -89,7 +89,6 @@
     </div>
 </div>
 
-<!-- Модальное окно выплаты ЗП -->
 <div id="modal-pay" class="screen hidden">
     <div class="box">
         <h3 id="pay-msg" style="font-size:16px; margin:0; line-height:1.4;">Выплатить остаток?</h3>
@@ -144,8 +143,9 @@
 
     let mode = 'local', userUid = 'local_user', pinCode = null, workers = [], curL = 'ru';
     let activePayTarget = null;
-    let holdTimer = null;
-    let isLongPress = false;
+
+    // Переменные для защиты от случайных нажатий при прокрутке
+    let touchStartX = 0, touchStartY = 0, isScrolling = false, holdTimer = null, isLongPress = false;
 
     const dict = {
         ru: { m: "МАСТЕР", t: "ИТОГО", h: "Ч", d: "Д", r: "Ст", ph: "Имя мастера", exit: "ВЫХОД", pinT: "Введите PIN", pinN: "Новый PIN", enter: "ВХОД", adv: "Сумма аванса:", qh: "Часы:", mo: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"], total: "ФОНД ЗП:", totAdv: "АВАНСЫ:", totPaid: "ВЫПЛАЧЕНО:", totBal: "ОСТАТОК:" },
@@ -253,9 +253,15 @@
                 }
 
                 html += `<td class="cd ${new Date(y, parseInt(m), d).getDay()===0?'sunday':''}" oncontextmenu="return false;">
-                    <div class="sq-h ${cellClass}" onpointerdown="fastH(event, ${idx},'${k}')" oncontextmenu="setCus(event,${idx},'${k}')">${cellText}</div>
+                    <div class="sq-h ${cellClass}" 
+                         onpointerdown="onPointerDown(event)" 
+                         onpointermove="onPointerMove(event)" 
+                         onpointerup="fastH(event, ${idx},'${k}')" 
+                         oncontextmenu="setCus(event,${idx},'${k}')">${cellText}</div>
+                    
                     <div class="${sqClass}" 
                          onpointerdown="handleTouchStart(event, ${idx}, '${k}', ${total})" 
+                         onpointermove="onPointerMove(event)" 
                          onpointerup="handleTouchEnd(event, ${idx}, '${k}')"
                          onpointercancel="handleTouchCancel()"
                          oncontextmenu="openPayModal(event, ${idx},'${k}', ${total})">${sqVal}</div>
@@ -273,25 +279,54 @@
         `;
     }
 
+    /* Логика отслеживания движения пальца (Защита от случайных сработок при скролле) */
+    window.onPointerDown = (e) => {
+        touchStartX = e.clientX;
+        touchStartY = e.clientY;
+        isScrolling = false;
+    }
+
+    window.onPointerMove = (e) => {
+        if (!touchStartX && !touchStartY) return;
+        let diffX = Math.abs(e.clientX - touchStartX);
+        let diffY = Math.abs(e.clientY - touchStartY);
+        if (diffX > 8 || diffY > 8) { // Если палец сместился больше чем на 8px, это скролл
+            isScrolling = true;
+            clearTimeout(holdTimer);
+        }
+    }
+
+    window.fastH = (e, i, k) => {
+        if (isScrolling || (e.button && e.button !== 0)) return;
+        if(!workers[i].d[k]) workers[i].d[k]={};
+        let cur = workers[i].d[k].h || 0;
+        workers[i].d[k].h = (cur === 0) ? 8 : (cur === 8 ? -1 : 0);
+        saveData();
+    }
+
     window.handleTouchStart = (e, i, k, total) => {
         if (e.button && e.button !== 0) return;
+        onPointerDown(e);
         isLongPress = false;
         holdTimer = setTimeout(() => {
-            isLongPress = true;
-            if (navigator.vibrate) navigator.vibrate(50);
-            window.openPayModal(e, i, k, total);
+            if (!isScrolling) {
+                isLongPress = true;
+                if (navigator.vibrate) navigator.vibrate(50);
+                window.openPayModal(e, i, k, total);
+            }
         }, 500);
     }
 
     window.handleTouchEnd = (e, i, k) => {
         clearTimeout(holdTimer);
-        if (!isLongPress && e.button === 0) {
+        if (!isScrolling && !isLongPress && e.button === 0) {
             setTimeout(() => window.fastA(i, k), 50);
         }
     }
 
     window.handleTouchCancel = () => {
         clearTimeout(holdTimer);
+        isScrolling = false;
     }
 
     window.saveData = async () => { 
@@ -305,14 +340,6 @@
     
     window.updR = (i,v) => { workers[i].r = v; saveData(); }
     window.delW = (i) => { if(confirm('Удалить?')) { workers.splice(i,1); saveData(); } }
-
-    window.fastH = (e, i, k) => {
-        if (e.button !== 0) return;
-        if(!workers[i].d[k]) workers[i].d[k]={};
-        let cur = workers[i].d[k].h || 0;
-        workers[i].d[k].h = (cur === 0) ? 8 : (cur === 8 ? -1 : 0);
-        saveData();
-    }
 
     window.fastA = (i, k) => {
         let v = prompt(dict[curL].adv); 
